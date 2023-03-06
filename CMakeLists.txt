@@ -9,8 +9,10 @@ project(avl_fault_detection)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   avl_msgs
-  rospy
   std_msgs
+
+  # Python deps
+  rospy
   sensor_msgs
 )
 
