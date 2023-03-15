@@ -44,7 +44,10 @@ def main():
     while not rospy.is_shutdown():
         pub_rpm_setpt.publish(Float64SetpointMsg(True, 10))
         pub_pit_setpt.publish(Float64SetpointMsg(True, math.radians(-45)))
-        log.write_data(["none"])
+        if rospy.Time.now() < 15:
+            log.write_data(["none"])
+        else:
+            log.write_data(["depth_sensor_zeroed"])
         setpt_pub_rate.sleep()
         ...
     
