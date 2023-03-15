@@ -10,7 +10,7 @@ uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
 for n_trial in range(n_trials):
     roslaunch.configure_logging(uuid)
     # launch = roslaunch.scriptapi.ROSLaunch()
-    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/workspaces/AUV-Fault-Detection/avl/src/avl_fault_detection/launch/full_system_simulation.launch"], is_core=True)
+    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/workspaces/AUV-Fault-Detection/avl/src/avl_fault_detection/launch/data_collection.launch"], is_core=True)
 
     # Start another node
     # node = roslaunch.core.Node(package, executable)
@@ -18,7 +18,7 @@ for n_trial in range(n_trials):
 
     print(f"Starting trial {n_trial}")
     # Create AVL log directories. This is what avl start does before running roslaunch.
-    subprocess.run("avl split".split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, text=True)
+    subprocess.run("/workspaces/AUV-Fault-Detection/avl/src/avl_tools/scripts/avl.sh split".split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, text=True)
     # Launch .launch file
     launch.start()
     start_time = time.time()
