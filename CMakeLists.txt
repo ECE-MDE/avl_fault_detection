@@ -163,6 +163,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   src/listener.py
   src/launcher.py
+  src/controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
