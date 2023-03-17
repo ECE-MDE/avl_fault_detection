@@ -11,6 +11,8 @@ def main():
 
     n_trials = 1
     trial_duration_s = float('inf')
+    fault_trigger_time = 120
+
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
     launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], is_core=True)
@@ -31,7 +33,6 @@ def main():
         # Create AVL log directories. This is what avl start does before running roslaunch.
         logger.AvlLogger.split()
 
-        fault_trigger_time = 120
         # This is a dumb hack - write fault trigger time param to file referenced by launch file so that it's loaded before nodes init
         with open(f"{SRC_PATH}/avl_fault_detection/src/fault_generation.config", "w") as f:
             f.writelines([f"fault_trigger_time: {fault_trigger_time}"])
