@@ -11,7 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   avl_msgs
   rospy
   std_msgs
-)
+  avl_core
+) 
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -135,6 +136,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/avl_fault_detection_node.cpp)
 
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -149,6 +151,10 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(ekf_fault_detection_node src/ekf_fault_detection_node.cpp)
+add_dependencies(ekf_fault_detection_node ${EXPORTED_TARGETS})
+target_link_libraries(ekf_fault_detection_node node ${catkin_LIBRARIES})
 
 #############
 ## Install ##
