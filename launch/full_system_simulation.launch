@@ -270,7 +270,7 @@
         <rosparam command="load" file="/var/avl_config/rpm_sim_node.config"/>
     </node>
 
-    <node name="listener" pkg="avl_fault_detection" type="listener.py"
+    <node name="controller" pkg="avl_fault_detection" type="controller.py"
            clear_params="true" required="true" output="screen">
         <!-- <rosparam command="load" file="/var/avl_config/rpm_sim_node.config"/> -->
     </node> 
