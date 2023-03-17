@@ -1,6 +1,7 @@
 from __future__ import annotations
+import itertools
 import time
-from typing import List
+from typing import List, Type
 import genpy
 import rospy
 from avl_fault_detection import util
@@ -16,13 +17,15 @@ class AvlLogger:
         self.log_path = Path(AvlLogger._AVL_LOG_DIR, f"{name}.log")
         self.log_file = None
 
-    def write_msg_header(self, msg: genpy.Message, units: List[str] | None = None):
-        if not units:
-            units = msg._slot_types
-        self.write_header(msg.__slots__, units)
+    def write_msg_header(self, msg_types: List[Type[genpy.Message]], data: List = [], msg_units: List[str] | None = None, units: List = []):
+        msg_headers = [s for m in [m.__slots__ for m in msg_types] for s in m]
+        if not msg_units:
+            msg_units = [u for m in [m._slot_types for m in msg_types] for u in m]
+        self.write_header(msg_headers + data, msg_units + units)
     
-    def write_msg_data(self, msg: genpy.Message):
-        self.write_data([getattr(msg, slot) for slot in msg.__slots__])
+    def write_msg_data(self, msgs: List[genpy.Message], data: List = []):
+        msg_data = [getattr(msg, slot) for msg in msgs for slot in msg.__slots__]
+        self.write_data(msg_data + data)
 
     def write_header(self, names: List[str], units: List[str]):
         if self.log_file:
