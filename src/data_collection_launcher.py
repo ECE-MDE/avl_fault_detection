@@ -7,23 +7,26 @@ from avl_fault_detection import logger
 
 SRC_PATH = "/workspaces/AUV-Fault-Detection/avl/src"
 
+"""
+TODO
+- Randomize fault_trigger_time for each trial
+- Figure out why starting roscore from this process freezes rospy.Time.now()
+- Allow setting n_trials, trial_duration_s, etc from cmd-line args
+- Add flag for whether AvlLogger.remove_current() is called
+"""
+
 def main():
 
-    n_trials = 1
-    trial_duration_s = float('inf')
+    n_trials = 2
+    trial_duration_s = rospy.Duration(240)
     fault_trigger_time = 120
-
-    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-    roslaunch.configure_logging(uuid)
-    launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], is_core=True)
 
     def clean_exit():
         launch.shutdown()
-        while True:
-            sys.exit(0)
+        sys.exit("Execution completed")
 
     for n_trial in range(n_trials):
-        print(f"Starting trial {n_trial}")
+        print(f"\n\nStarting trial {n_trial}\n\n")
 
         # For whatever reason /var/avl_logs/current isn't deleted when we shut down the simulation via the API
         # Keeping this allows the logger to append to the same log
@@ -33,21 +36,25 @@ def main():
         # Create AVL log directories. This is what avl start does before running roslaunch.
         logger.AvlLogger.split()
 
-        # This is a dumb hack - write fault trigger time param to file referenced by launch file so that it's loaded before nodes init
-        with open(f"{SRC_PATH}/avl_fault_detection/src/fault_generation.config", "w") as f:
-            f.writelines([f"fault_trigger_time: {fault_trigger_time}"])
-
         # Launch .launch file
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], roslaunch_strs=[f'<launch><param name="/fault_trigger_time" type="int" value="{fault_trigger_time}"/></launch>'], is_core=False)
         launch.start()
+
         # Start a node so we can hook into ROS and wait for shutdown
         rospy.init_node('data_collection_launcher', anonymous=True)
         rospy.on_shutdown(clean_exit)
-        start_time = time.time()
 
-        while time.time() - start_time < trial_duration_s and not rospy.is_shutdown():
+        # rospy.Timer(trial_duration_s, lambda: launch.shutdown(), oneshot=True)
+        # launch.spin()
+        start_time = rospy.Time.now()
+        while rospy.Time.now() - start_time < trial_duration_s and not rospy.is_shutdown():
+            print(rospy.Time.now().secs)
             launch.spin_once()
+            # rospy.spin_once()
         
-        print(f"Ending trial {n_trial}")
+        print(f"\n\nEnding trial {n_trial}\n\n")
         launch.shutdown()
 
 

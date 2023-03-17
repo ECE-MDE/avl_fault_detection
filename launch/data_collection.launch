@@ -303,5 +303,4 @@
 
     <!-- Use sim init mode -->
     <param name="/inertial_nav_node/init_mode" type="int" value="4" />
-    <rosparam command="load" file="/workspaces/AUV-Fault-Detection/avl/src/avl_fault_detection/src/fault_generation.config"/>
 </launch>
