@@ -1,16 +1,29 @@
 from __future__ import annotations
-import itertools
 import time
 from typing import List, Type
 import genpy
 import rospy
-from avl_fault_detection import util
 from pathlib import Path
+import subprocess
 
 
 class AvlLogger:
 
-    _AVL_LOG_DIR = Path('/var/avl_logs/current/log')
+    _AVL_CURRENT = Path('/var/avl_logs/current')
+    _AVL_LOG_DIR = Path(_AVL_CURRENT, 'log')
+    _SRC_PATH = "/workspaces/AUV-Fault-Detection/avl/src"
+
+    @classmethod
+    def remove_current(cls):
+        if cls._AVL_CURRENT.exists():
+            cls._AVL_CURRENT.unlink()
+
+    @classmethod
+    def split(cls):
+        """
+        Create AVL log directories. This is what avl start does before running roslaunch.
+        """
+        subprocess.run(f"{cls._SRC_PATH}/avl_tools/scripts/avl.sh split".split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, text=True)
 
     def __init__(self, name: str):
         self.name = name

@@ -60,20 +60,20 @@
         <rosparam command="load" file="/var/avl_config/logging_control_node.config"/>
     </node>
 
-    <!-- <node name="mission_manager_node" pkg="avl_system" type="mission_manager_node"
+    <node name="mission_manager_node" pkg="avl_system" type="mission_manager_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/mission_manager_node.config"/>
-    </node> -->
+    </node>
 
     <node name="parameter_node" pkg="avl_system" type="parameter_node"
         clear_params="true" output="screen" required="true">
         <rosparam command="load" file="/var/avl_config/parameter_node.config"/>
     </node>
 
-    <node name="safety_node" pkg="avl_system" type="safety_node"
+    <!-- <node name="safety_node" pkg="avl_system" type="safety_node"
         clear_params="true" output="screen" required="true">
         <rosparam command="load" file="/var/avl_config/safety_node.config"/>
-    </node>
+    </node> -->
 
     <!-- <node name="system_command_node" pkg="avl_system" type="system_command_node"
         clear_params="true" output="screen" required="true">
@@ -143,7 +143,7 @@
     <!-- avl_control nodes -->
     <!-- =================================================================== -->
 
-    <node name="height_control_node" pkg="avl_control" type="height_control_node"
+    <!-- <node name="height_control_node" pkg="avl_control" type="height_control_node"
         clear_params="true" required="true" output="screen">
           <rosparam command="load" file="/var/avl_config/height_control_node_690.config"/>
     </node>
@@ -156,27 +156,27 @@
     <node name="orbit_control_node" pkg="avl_control" type="orbit_control_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/orbit_control_node_690.config"/>
-    </node>
+    </node> -->
 
     <node name="rpm_control_node" pkg="avl_control" type="rpm_control_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/rpm_control_node_690.config"/>
     </node>
 
-    <node name="speed_control_node" pkg="avl_control" type="speed_control_node"
+    <!-- <node name="speed_control_node" pkg="avl_control" type="speed_control_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/speed_control_node_690.config"/>
-    </node>
+    </node> -->
 
     <node name="pid_attitude_control_node" pkg="avl_control" type="pid_attitude_control_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/pid_attitude_control_node_690.config"/>
     </node>
 
-    <node name="pid_depth_control_node" pkg="avl_control" type="pid_depth_control_node"
+    <!-- <node name="pid_depth_control_node" pkg="avl_control" type="pid_depth_control_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/pid_depth_control_node_690.config"/>
-    </node>
+    </node> -->
 
     <!-- =================================================================== -->
     <!-- avl_navigation nodes -->
@@ -212,7 +212,7 @@
 
     <node name="simulation_time_node" pkg="avl_simulation" type="simulation_time_node"
         clear_params="true" required="true" output="screen">
-        <rosparam command="load" file="/var/avl_config/simulation_time_node.config"/>
+        <rosparam command="load" file="/workspaces/AUV-Fault-Detection/avl/src/avl_fault_detection/src/simulation_time_node.config"/>
     </node>
 
     <node name="auv_dynamics_node" pkg="avl_simulation" type="auv_dynamics_node"
@@ -240,10 +240,10 @@
         <rosparam command="load" file="/var/avl_config/gps_sim_node.config"/>
     </node>
 
-    <node name="height_sim_node" pkg="avl_simulation" type="height_sim_node"
+    <!-- <node name="height_sim_node" pkg="avl_simulation" type="height_sim_node"
         clear_params="true" required="true" output="screen">
         <rosparam command="load" file="/var/avl_config/height_sim_node.config"/>
-    </node>
+    </node> -->
 
     <node name="imu_sim_node" pkg="avl_simulation" type="imu_sim_node"
         clear_params="true" required="true" output="screen">
@@ -270,7 +270,7 @@
         <rosparam command="load" file="/var/avl_config/rpm_sim_node.config"/>
     </node>
 
-    <node name="controller" pkg="avl_fault_detection" type="controller.py"
+    <node name="data_collector" pkg="avl_fault_detection" type="data_collector.py"
            clear_params="true" required="true" output="screen">
         <!-- <rosparam command="load" file="/var/avl_config/rpm_sim_node.config"/> -->
     </node> 
@@ -297,4 +297,10 @@
        <arg name="bson_only_mode" value="false"/>
     </include> -->
 
+    <!-- =================================================================== -->
+    <!-- Parameter Overrides -->
+    <!-- =================================================================== -->
+
+    <!-- Use sim init mode -->
+    <param name="/inertial_nav_node/init_mode" type="int" value="4" />
 </launch>

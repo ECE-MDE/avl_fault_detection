@@ -18,13 +18,12 @@ yaw rate
 
 def main():
     # Create a node
-    rospy.init_node('controller', anonymous=True)
+    rospy.init_node('data_collector', anonymous=True)
 
     start_time = rospy.Time.now()
-    logging_rate_hz = rospy.Rate(10)
-    setpt_pub_rate_hz = rospy.Rate(1)
+    logging_rate_hz = rospy.Rate(2)
 
-    log = logger.AvlLogger('controller')
+    log = logger.AvlLogger('data_collector')
     log.write_msg_header([VehicleStateMsg], ["fault_type"], units=["none"])
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
@@ -36,25 +35,31 @@ def main():
         # print(f"{15} {math.radians(15)} {math.degrees(msg.pitch)} {msg.pitch}\r")
         logging_rate_hz.sleep()
 
+    rospy.Subscriber("/sim/state", VehicleStateMsg, log_sim_state)
     # Create RPM and pitch setpoint publishes to get the AUV moving
     pub_rpm_setpt = rospy.Publisher("setpoint/rpm", Float64SetpointMsg, queue_size=100)
+    pub_yaw_setpt = rospy.Publisher("setpoint/yaw", Float64SetpointMsg, queue_size=100)
     pub_pit_setpt = rospy.Publisher("setpoint/pitch", Float64SetpointMsg, queue_size=100)
+    pub_rol_setpt = rospy.Publisher("setpoint/roll", Float64SetpointMsg, queue_size=100)
     pub_act_ctl = rospy.Publisher("device/actuator_control", ActuatorControlMsg, queue_size=100)
 
-    rospy.Subscriber("/sim/state", VehicleStateMsg, log_sim_state)
-
-    # Print a list of all currently published topics
-    # for name, topic_type in rospy.get_published_topics():
-    #     print(f"{name} {topic_type}")
-
-    while not rospy.is_shutdown():
-        pub_act_ctl.publish(ActuatorControlMsg(True))
-        pub_rpm_setpt.publish(Float64SetpointMsg(True, 10))
+    def publish_setpoints(event):
+        pub_rpm_setpt.publish(Float64SetpointMsg(True, 2000)) # 2000 is max rpm for 690
+        pub_yaw_setpt.publish(Float64SetpointMsg(True, math.radians(0)))
         pub_pit_setpt.publish(Float64SetpointMsg(True, math.radians(15)))
-        setpt_pub_rate_hz.sleep()
-        ...
+        pub_rol_setpt.publish(Float64SetpointMsg(True, math.radians(0)))
     
-    log.close()
+    def publish_actuator_enable(event):
+        pub_act_ctl.publish(ActuatorControlMsg(True))
+
+    rospy.Timer(rospy.Duration(1.0 / 10.0), publish_setpoints)
+    rospy.Timer(rospy.Duration(1.0 / 0.5), publish_actuator_enable)
+
+    try:
+        rospy.spin()
+    finally:
+        log.close()
+    
 
 if __name__ == '__main__':
     main()
