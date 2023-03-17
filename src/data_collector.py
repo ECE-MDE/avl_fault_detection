@@ -23,12 +23,14 @@ def main():
     start_time = rospy.Time.now()
     logging_rate_hz = rospy.Rate(2)
 
+    fault_trigger_time = rospy.Duration(rospy.get_param("/fault_trigger_time"))
+
     log = logger.AvlLogger('data_collector')
     log.write_msg_header([VehicleStateMsg], ["fault_type"], units=["none"])
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
     def log_sim_state(msg: VehicleStateMsg):
-        fault_type = "none" if rospy.Time.now() - start_time < rospy.Duration(15) else "depth_sensor_zero"
+        fault_type = "none" if rospy.Time.now() - start_time < fault_trigger_time else "depth_sensor_zero"
         log.write_msg_data([msg], [fault_type])
         log.flush() # for debugging purposes
         print(f"{msg}\r")

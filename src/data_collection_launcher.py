@@ -31,6 +31,11 @@ def main():
         # Create AVL log directories. This is what avl start does before running roslaunch.
         logger.AvlLogger.split()
 
+        fault_trigger_time = 120
+        # This is a dumb hack - write fault trigger time param to file referenced by launch file so that it's loaded before nodes init
+        with open(f"{SRC_PATH}/avl_fault_detection/src/fault_generation.config", "w") as f:
+            f.writelines([f"fault_trigger_time: {fault_trigger_time}"])
+
         # Launch .launch file
         launch.start()
         # Start a node so we can hook into ROS and wait for shutdown
