@@ -21,10 +21,6 @@ def main():
     trial_duration_s = rospy.Duration(240)
     fault_trigger_time = 120
 
-    def clean_exit():
-        launch.shutdown()
-        sys.exit("Execution completed")
-
     for n_trial in range(n_trials):
         print(f"\n\nStarting trial {n_trial}\n\n")
 
@@ -42,6 +38,9 @@ def main():
         launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], roslaunch_strs=[f'<launch><param name="/fault_trigger_time" type="int" value="{fault_trigger_time}"/></launch>'], is_core=False)
         launch.start()
 
+        def clean_exit():
+            launch.shutdown()
+            sys.exit("Execution completed")
         # Start a node so we can hook into ROS and wait for shutdown
         rospy.init_node('data_collection_launcher', anonymous=True)
         rospy.on_shutdown(clean_exit)
@@ -50,9 +49,8 @@ def main():
         # launch.spin()
         start_time = rospy.Time.now()
         while rospy.Time.now() - start_time < trial_duration_s and not rospy.is_shutdown():
-            print(rospy.Time.now().secs)
+            print(f"{rospy.Time.now().secs}\r")
             launch.spin_once()
-            # rospy.spin_once()
         
         print(f"\n\nEnding trial {n_trial}\n\n")
         launch.shutdown()
