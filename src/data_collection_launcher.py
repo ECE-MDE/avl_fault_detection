@@ -3,6 +3,8 @@ import roslaunch
 import time
 import sys
 import rospy
+import roslibpy
+import signal
 from avl_fault_detection import logger
 
 SRC_PATH = "/workspaces/AUV-Fault-Detection/avl/src"
@@ -18,8 +20,11 @@ TODO
 def main():
 
     n_trials = 2
-    trial_duration_s = rospy.Duration(240)
-    fault_trigger_time = 120
+    trial_duration_s = 60
+    fault_trigger_time = 30
+
+    ros = roslibpy.Ros('localhost', 9090)
+    ros.on_ready(lambda: print('Is ROS connected?', ros.is_connected))
 
     for n_trial in range(n_trials):
         print(f"\n\nStarting trial {n_trial}\n\n")
@@ -36,25 +41,36 @@ def main():
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], roslaunch_strs=[f'<launch><param name="/fault_trigger_time" type="int" value="{fault_trigger_time}"/></launch>'], is_core=False)
+        
+        # Handle Ctrl+C
+        def handle_exit(signum, frame):
+            launch.shutdown()
+            ros.close()
+            sys.exit()
+
+        signal.signal(signal.SIGINT, handle_exit)
+        
+        # Start the launch
         launch.start()
 
-        def clean_exit():
-            launch.shutdown()
-            sys.exit("Execution completed")
-        # Start a node so we can hook into ROS and wait for shutdown
-        rospy.init_node('data_collection_launcher', anonymous=True)
-        rospy.on_shutdown(clean_exit)
+        # After the launch is finished, connect to rosbridge
+        ros.connect()
+        ros.run(timeout=30)
 
-        # rospy.Timer(trial_duration_s, lambda: launch.shutdown(), oneshot=True)
-        # launch.spin()
-        start_time = rospy.Time.now()
-        while rospy.Time.now() - start_time < trial_duration_s and not rospy.is_shutdown():
-            print(f"{rospy.Time.now().secs}\r")
+        # Publish sim_ready: True when launch is finished. This tells the data collector node to start publishing setpoints
+        launch_finished_topic = roslibpy.Topic(ros, 'fault_gen/sim_ready', 'std_msgs/Bool')
+        launch_finished_topic.publish(roslibpy.Message({'data': True}))
+
+        start_time = ros.get_time().secs
+        while ros.get_time().secs - start_time < trial_duration_s:
+            # print(f"{ros.get_time().secs}\r")
             launch.spin_once()
         
         print(f"\n\nEnding trial {n_trial}\n\n")
         launch.shutdown()
+        ros.close()
 
+    sys.exit()
 
 if __name__ == '__main__':
     main()

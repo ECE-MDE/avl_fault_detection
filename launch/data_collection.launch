@@ -296,6 +296,8 @@
     <!-- <include file="$(find rosbridge_server)/launch/rosbridge_tcp.launch">
        <arg name="bson_only_mode" value="false"/>
     </include> -->
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+    </include>
 
     <!-- =================================================================== -->
     <!-- Parameter Overrides -->
