@@ -57,10 +57,6 @@ def main():
         ros.connect()
         ros.run(timeout=30)
 
-        # Publish sim_ready: True when launch is finished. This tells the data collector node to start publishing setpoints
-        launch_finished_topic = roslibpy.Topic(ros, 'fault_gen/sim_ready', 'std_msgs/Bool')
-        launch_finished_topic.publish(roslibpy.Message({'data': True}))
-
         start_time = ros.get_time().secs
         while ros.get_time().secs - start_time < trial_duration_s:
             # print(f"{ros.get_time().secs}\r")

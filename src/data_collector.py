@@ -43,10 +43,26 @@ class Fault:
     def is_enabled(self) -> bool:
         return self._enabled
 
+class Flag:
+    def __init__(self, state: bool = False):
+        self._state = state
+    
+    def toggle(self) -> bool:
+        self._state = not self._state
+        return self._state
+
+    def set(self, state: bool) -> bool:
+        self._state = state
+        return self._state
+    
+    def get(self) -> bool:
+        return self._state
+
 def main():
     # Create a node
     rospy.init_node('data_collector', anonymous=True)
 
+    state_initialized = Flag()
     start_time = rospy.Time.from_sec(0)
     logging_rate_hz = rospy.Rate(2)
 
@@ -56,6 +72,7 @@ def main():
 
     log = logger.AvlLogger('data_collector')
     log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name()], units=["bool"])
+
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
     def log_sim_state(msg: VehicleStateMsg):
@@ -81,28 +98,34 @@ def main():
     def publish_actuator_enable(event):
         pub_act_ctl.publish(ActuatorControlMsg(True))
 
-    # Wait for the sim to be ready to publish setpoints
-    def sim_ready(msg: Bool):
-        if msg.data == True:
-            # Wait for a bit before we start publishing
-            rospy.sleep(10) 
-            print("\n\nBeginning to publish setpoints!\n\n")
-            # Record start time so we can log when fault starts
-            now = rospy.Time.now()
-            start_time.set(now.secs, now.nsecs)
+    def set_state_initialized(msg: VehicleStateMsg):
+        state_initialized.set(True)
 
-            # Print sim state to stdout
-            rospy.Subscriber("/sim/state", VehicleStateMsg, log_sim_state)
+    # listen for first vehicle state message
+    rospy.Subscriber("/sim/state", VehicleStateMsg, set_state_initialized)
 
-            fault_depth_sensor_zero.start_publisher()
+    # Wait until set_state_initialized is called
+    while not state_initialized.get():
+        rospy.sleep(0.1)
 
-            # Set up timers to repeatedly call the publishing methods
-            rospy.Timer(rospy.Duration(1.0 / 10.0), publish_setpoints)
-            rospy.Timer(rospy.Duration(1.0 / 0.5), publish_actuator_enable)
-            # Set up timer to start fault generation
-            rospy.Timer(fault_trigger_time, lambda _: fault_depth_sensor_zero.enable(), oneshot=True)
+    # Wait for a bit before we start publishing
+    rospy.sleep(10) 
+    print("\n\nBeginning to publish setpoints!\n\n")
+    # Record start time so we can log when fault starts
+    now = rospy.Time.now()
+    start_time.set(now.secs, now.nsecs)
 
-    rospy.Subscriber("fault_gen/sim_ready", Bool, sim_ready)
+    # Print sim state to stdout
+    rospy.Subscriber("/sim/state", VehicleStateMsg, log_sim_state)
+
+    # Start publishing fault status
+    fault_depth_sensor_zero.start_publisher()
+
+    # Set up timers to repeatedly call the publishing methods
+    rospy.Timer(rospy.Duration(1.0 / 10.0), publish_setpoints)
+    rospy.Timer(rospy.Duration(1.0 / 0.5), publish_actuator_enable)
+    # Set up timer to start fault generation
+    rospy.Timer(fault_trigger_time, lambda _: fault_depth_sensor_zero.enable(), oneshot=True)
 
     try:
         rospy.spin()
