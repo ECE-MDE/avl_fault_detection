@@ -164,6 +164,7 @@ catkin_install_python(PROGRAMS
   src/listener.py
   src/data_collection_launcher.py
   src/data_collector.py
+  src/simple_fault_detector.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

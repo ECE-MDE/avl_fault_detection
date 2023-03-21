@@ -2,6 +2,7 @@ import math
 from typing import Dict
 import rospy
 from avl_fault_detection import logger
+from avl_fault_detection.util import Flag
 from avl_msgs.msg import VehicleStateMsg, Float64SetpointMsg, ActuatorControlMsg
 from std_msgs.msg import Bool
 """
@@ -42,21 +43,6 @@ class Fault:
 
     def is_enabled(self) -> bool:
         return self._enabled
-
-class Flag:
-    def __init__(self, state: bool = False):
-        self._state = state
-    
-    def toggle(self) -> bool:
-        self._state = not self._state
-        return self._state
-
-    def set(self, state: bool) -> bool:
-        self._state = state
-        return self._state
-    
-    def get(self) -> bool:
-        return self._state
 
 def main():
     # Create a node
