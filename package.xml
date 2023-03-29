@@ -59,6 +59,19 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
+  <!-- ROS Dependencies -->
+  <depend>roscpp</depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>message_runtime</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <!-- AVL Package Dependencies -->
+  <depend>avl_core</depend>
+  <depend>avl_devices</depend>
+  <depend>avl_navigation</depend> 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

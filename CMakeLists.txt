@@ -12,6 +12,18 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   avl_core
+  roscpp
+  message_generation
+  avl_msgs
+  avl_asio
+  avl_comms
+  message_runtime
+  std_msgs
+  std_srvs
+  geometry_msgs
+  sensor_msgs
+  avl_devices
+  avl_navigation
 ) 
 
 ## System dependencies are found with CMake's conventions
@@ -109,10 +121,34 @@ catkin_package(
 #  CATKIN_DEPENDS avl_msgs rospy std_msgs
 #  DEPENDS system_lib
 )
+# Create a variable for all exported targets for dependencies
+
+# Specify catkin-specific information to the build system
+catkin_package(
+    INCLUDE_DIRS
+    LIBRARIES
+    CATKIN_DEPENDS
+        roscpp
+        message_runtime
+        std_msgs
+        std_srvs
+        geometry_msgs
+        sensor_msgs
+        avl_core
+        avl_msgs
+        avl_devices
+        avl_navigation
+    DEPENDS
+    CFG_EXTRAS
+)
+
+
+set(EXPORTED_TARGETS ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ###########
 ## Build ##
 ###########
+
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
