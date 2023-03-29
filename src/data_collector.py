@@ -53,16 +53,17 @@ def main():
     logging_rate_hz = rospy.Rate(2)
 
     fault_trigger_time = rospy.Duration(rospy.get_param("/fault_trigger_time"))
+    hull_drag_coeff = rospy.get_param("/auv_dynamics_node/X_uu")
 
     fault_depth_sensor_zero = Fault("fault_gen/depth_sensor_zero")
 
     log = logger.AvlLogger('data_collector')
-    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name()], msg_units=["bool"])
+    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name(), "hull_drag"], msg_units=["bool", "bool"])
 
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
     def log_sim_state(msg: VehicleStateMsg):
-        log.write_msg_data([msg], [fault_depth_sensor_zero.is_enabled()])
+        log.write_msg_data([msg], [fault_depth_sensor_zero.is_enabled(), hull_drag_coeff != -3.2440])
         log.flush() # for debugging purposes
         print(f"{fault_trigger_time}\n{(rospy.Time.now() - start_time).secs}\n{rospy.Time.now().secs}\n{msg}\r")
         # print(f"{15} {math.radians(15)} {math.degrees(msg.pitch)} {msg.pitch}\r")
