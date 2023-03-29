@@ -57,7 +57,7 @@ def main():
     fault_depth_sensor_zero = Fault("fault_gen/depth_sensor_zero")
 
     log = logger.AvlLogger('data_collector')
-    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name()], units=["bool"])
+    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name()], msg_units=["bool"])
 
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
