@@ -33,14 +33,19 @@
 
 // Node base class
 #include <avl_core/node.h>
+#include <avl_core/monitored_subscriber.h>
+
 
 // ROS message includes
+#include <std_msgs/Float64.h>
 #include <avl_msgs/GpsMsg.h>
 #include <avl_msgs/Float64SetpointMsg.h>
+#include <avl_msgs/NavigationMsg.h>
+#include <avl_msgs/AhrsMsg.h>
 using namespace avl_msgs;
 
 // Extended kalman filter
-//#include <avl_navigation/include/avl_navigation/filter/ekf.h>
+#include <avl_navigation/filter/ekf.h>
 
 //==============================================================================
 //                              NODE DEFINITION
@@ -60,8 +65,9 @@ public:
     }
 
 private:
+
     // Subscribers for sensor data
-    MonitoredSubscriber<NavigationMsg>     nav_sub;
+    MonitoredSubscriber<NavigationMsg> nav_sub;
     MonitoredSubscriber<std_msgs::Float64> depth_sub;
     MonitoredSubscriber<std_msgs::Float64> rpm_sub;
     MonitoredSubscriber<std_msgs::Float64> height_sub;
@@ -107,10 +113,10 @@ private:
     double depth_cmd = NAN;
     double height_cmd = NAN;
     double rpm_cmd = NAN;
-    double elevator_setpoint = NAN;
-    double rudder_setpoint = NAN;
+    double elevator_cmd = NAN;
+    double rudder_cmd = NAN;
 
-
+//TODO use filter
     // EKF for calculating residuals
     // Ekf filter;
 
@@ -156,22 +162,13 @@ private:
         roll =  message.roll;
         pitch = message.pitch;
         yaw =   message.yaw;
-        vn =    message.vn;
-        ve =    message.ve;
-        vd =    message.vd;
+        // vn =    message.vn;
+        // ve =    message.ve;
+        // vd =    message.vd;
         lat =   message.lat;
         lon =   message.lon;
         alt =   message.alt;
     }
-
-    MonitoredSubscriber<Float64SetpointMsg> depth_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> height_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> roll_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> pitch_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> yaw_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> elevator_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> rudder_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> rpm_cmd_sub;
 
     //--------------------------------------------------------------------------
     // Name:        depth_setpoint_callback
@@ -212,7 +209,7 @@ private:
     {
         // If there is an elevator setpoint, it takes precedence over
         // the fin angles from attitude setpoints
-        pitch_cmd = std::isnan(elevator_setpoint) ? message.data : elevator_setpoint;
+        pitch_cmd = std::isnan(elevator_cmd) ? message.data : elevator_cmd;
     }
 
     //--------------------------------------------------------------------------
@@ -224,39 +221,29 @@ private:
     {
         // If there is a rudder setpoint, it takes precedence over
         // the fin angles from attitude setpoints
-        yaw_cmd = std::isnan(rudder_setpoint) ? message.data : rudder_setpoint;
+        yaw_cmd = std::isnan(rudder_cmd) ? message.data : rudder_cmd;
     }
 
     //--------------------------------------------------------------------------
-    // Name:        elevator_setpoint_callback
+    // Name:        elevator_cmd_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void elevator_setpoint_callback(const Float64SetpointMsg &message)
+    void elevator_cmd_callback(const Float64SetpointMsg &message)
     {
-        elevator_setpoint = message.data;
+        elevator_cmd = message.data;
         pitch_cmd = message.data;
     }
 
     //--------------------------------------------------------------------------
-    // Name:        rudder_setpoint_callback
+    // Name:        rudder_cmd_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void rudder_setpoint_callback(const Float64SetpointMsg &message)
+    void rudder_cmd_callback(const Float64SetpointMsg &message)
     {
-        rudder_setpoint = message.data;
+        rudder_cmd = message.data;
         yaw_cmd = message.data;
-    }
-
-    //--------------------------------------------------------------------------
-    // Name:        depth_setpoint_callback
-    // Description: Called when a message is received on the topic.
-    // Arguments:   - message: Message received on the topic.
-    //--------------------------------------------------------------------------
-    void depth_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        depth_cmd = message.data;
     }
 
     //--------------------------------------------------------------------------
@@ -362,6 +349,7 @@ private:
         // Get residuals from filter
         // Check residuals for error (threshold or std deviation check)
             // Can store thresholds in config file
+        std::cout << "Roll: " << roll << '\n';
         double depth_thresh =  get_param<double>("~thresholds/depth");
         double height_thresh = get_param<double>("~thresholds/height");
 
@@ -373,13 +361,7 @@ private:
     //--------------------------------------------------------------------------
     void init()
     {
-
-        // Get config file parameters
-        use_gps_yaw = get_param<bool>("~use_gps_yaw");
-        use_gps_vel = get_param<bool>("~use_gps_vel");
-
         // Set up the publishers and subscribers
-//TODO add devices
         depth_sub.subscribe("device/depth", 1,
             &EkfFaultDetectionNode::depth_msg_callback,
             &EkfFaultDetectionNode::fault_callback, this);
@@ -408,10 +390,10 @@ private:
                         &EkfFaultDetectionNode::yaw_setpoint_callback,
                         &EkfFaultDetectionNode::fault_callback, this);
         elevator_cmd_sub.subscribe("setpoint/elevator", 8,
-                        &EkfFaultDetectionNode::elevator_setpoint_callback,
+                        &EkfFaultDetectionNode::elevator_cmd_callback,
                         &EkfFaultDetectionNode::fault_callback, this);
         rudder_cmd_sub.subscribe("setpoint/rudder", 8,
-                        &EkfFaultDetectionNode::rudder_setpoint_callback,
+                        &EkfFaultDetectionNode::rudder_cmd_callback,
                         &EkfFaultDetectionNode::fault_callback, this);
         rpm_cmd_sub.subscribe("setpoint/rpm", 8,
                         &EkfFaultDetectionNode::rpm_setpoint_callback,
