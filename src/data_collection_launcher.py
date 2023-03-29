@@ -22,6 +22,7 @@ def main():
     n_trials = 2
     trial_duration_s = 60
     fault_trigger_time = 30
+    hull_drag_coeff = -3.2440
 
     ros = roslibpy.Ros('localhost', 9090)
     ros.on_ready(lambda: print('Is ROS connected?', ros.is_connected))
@@ -40,12 +41,13 @@ def main():
         # Launch .launch file
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], roslaunch_strs=[f'<launch><param name="/fault_trigger_time" type="int" value="{fault_trigger_time}"/></launch>'], is_core=False)
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [f"{SRC_PATH}/avl_fault_detection/launch/data_collection.launch"], roslaunch_strs=[f'<launch><param name="/fault_trigger_time" type="int" value="{fault_trigger_time}"/><param name="/auv_dynamics_node/X_uu" type="double" value="{hull_drag_coeff}"/></launch>'], is_core=False)
         
         # Handle Ctrl+C
         def handle_exit(signum, frame):
             launch.shutdown()
             ros.close()
+            util.kill_all_nodes()
             sys.exit()
 
         signal.signal(signal.SIGINT, handle_exit)
