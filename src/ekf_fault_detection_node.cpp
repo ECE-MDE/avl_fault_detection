@@ -349,7 +349,6 @@ private:
         // Get residuals from filter
         // Check residuals for error (threshold or std deviation check)
             // Can store thresholds in config file
-        std::cout << "Roll: " << roll << '\n';
         double depth_thresh =  get_param<double>("~thresholds/depth");
         double height_thresh = get_param<double>("~thresholds/height");
 
