@@ -13,6 +13,10 @@ def grouped(iterable, n):
     "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
     return zip(*[iter(iterable)]*n)
 
+def kill_all_nodes():
+    if len(os.popen("rosnode list").readlines()) > 0:
+        os.system('rosnode kill -a')
+
 class Flag:
     def __init__(self, state: bool = False):
         self._state = state
