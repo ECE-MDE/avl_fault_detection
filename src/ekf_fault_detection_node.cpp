@@ -73,14 +73,14 @@ private:
     MonitoredSubscriber<std_msgs::Float64> height_sub;
 
     // Subscribers for vehicle setpoints
-    MonitoredSubscriber<Float64SetpointMsg> depth_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> height_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> roll_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> pitch_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> yaw_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> elevator_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> rudder_cmd_sub;
-    MonitoredSubscriber<Float64SetpointMsg> rpm_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> depth_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> height_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> roll_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> pitch_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> yaw_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> elevator_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> rudder_cmd_sub;
+    // MonitoredSubscriber<Float64SetpointMsg> rpm_cmd_sub;
 
     // Timer and its duration for iterations
     ros::Timer iteration_timer;
@@ -96,29 +96,34 @@ private:
     double lat = NAN;
     double lon = NAN;
     double alt = NAN;
-    double depth = NAN;
-    double height = NAN;
-    double rpm = NAN;
+    // double depth = NAN;
+    // double height = NAN;
+    // double rpm = NAN;
 
     // Variables to store latest vehicle commands
-    double roll_cmd = NAN;
-    double pitch_cmd = NAN;
-    double yaw_cmd = NAN;
-    double vn_cmd = NAN;
-    double ve_cmd = NAN;
-    double vd_cmd = NAN;
-    double lat_cmd = NAN;
-    double lon_cmd = NAN;
-    double alt_cmd = NAN;
-    double depth_cmd = NAN;
-    double height_cmd = NAN;
-    double rpm_cmd = NAN;
-    double elevator_cmd = NAN;
-    double rudder_cmd = NAN;
+    // double roll_cmd = NAN;
+    // double pitch_cmd = NAN;
+    // double yaw_cmd = NAN;
+    // double vn_cmd = NAN;
+    // double ve_cmd = NAN;
+    // double vd_cmd = NAN;
+    // double lat_cmd = NAN;
+    // double lon_cmd = NAN;
+    // double alt_cmd = NAN;
+    // double depth_cmd = NAN;
+    // double height_cmd = NAN;
+    // double rpm_cmd = NAN;
+    // double elevator_cmd = NAN;
+    // double rudder_cmd = NAN;
 
-//TODO use filter
     // EKF for calculating residuals
-    // Ekf filter;
+    Ekf filter;
+
+    // Filter initial state, its covariance, and process noise covariance
+    int num_states;
+    MatrixXd P0;
+    MatrixXd Q;
+    bool filter_initialized = false;
 
 private:
 
@@ -127,30 +132,30 @@ private:
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: message received on the topic
     //--------------------------------------------------------------------------
-    void depth_msg_callback(const std_msgs::Float64& message)
-    {
-        depth = message.data;
-    }
+    // void depth_msg_callback(const std_msgs::Float64& message)
+    // {
+    //     depth = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        height_msg_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: message received on the topic
     //--------------------------------------------------------------------------
-    void height_msg_callback(const std_msgs::Float64& message)
-    {
-        height = message.data;
-    }
+    // void height_msg_callback(const std_msgs::Float64& message)
+    // {
+    //     height = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        rpm_msg_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: message received on the topic
     //--------------------------------------------------------------------------
-    void rpm_msg_callback(const std_msgs::Float64& message)
-    {
-        rpm = message.data;
-    }
+    // void rpm_msg_callback(const std_msgs::Float64& message)
+    // {
+    //     rpm = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        nav_msg_callback
@@ -162,9 +167,9 @@ private:
         roll =  message.roll;
         pitch = message.pitch;
         yaw =   message.yaw;
-        // vn =    message.vn;
-        // ve =    message.ve;
-        // vd =    message.vd;
+        vn =    message.vn;
+        ve =    message.ve;
+        vd =    message.vd;
         lat =   message.lat;
         lon =   message.lon;
         alt =   message.alt;
@@ -175,86 +180,86 @@ private:
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void depth_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        depth_cmd = message.data;
-    }
+    // void depth_setpoint_callback(const Float64SetpointMsg &message)
+    // {
+    //     depth_cmd = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        height_setpoint_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void height_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        height_cmd = message.data;
-    }
+    // void height_setpoint_callback(const Float64SetpointMsg &message)
+    // {
+    //     height_cmd = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        roll_setpoint_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void roll_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        roll_cmd = message.data;
-    }
+    // void roll_setpoint_callback(const Float64SetpointMsg &message)
+    // {
+    //     roll_cmd = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        pitch_setpoint_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void pitch_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        // If there is an elevator setpoint, it takes precedence over
-        // the fin angles from attitude setpoints
-        pitch_cmd = std::isnan(elevator_cmd) ? message.data : elevator_cmd;
-    }
+    // void pitch_setpoint_callback(const Float64SetpointMsg &message)
+    // {
+    //     // If there is an elevator setpoint, it takes precedence over
+    //     // the fin angles from attitude setpoints
+    //     pitch_cmd = std::isnan(elevator_cmd) ? message.data : elevator_cmd;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        yaw_setpoint_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void yaw_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        // If there is a rudder setpoint, it takes precedence over
-        // the fin angles from attitude setpoints
-        yaw_cmd = std::isnan(rudder_cmd) ? message.data : rudder_cmd;
-    }
+    // void yaw_setpoint_callback(const Float64SetpointMsg &message)
+    // {
+    //     // If there is a rudder setpoint, it takes precedence over
+    //     // the fin angles from attitude setpoints
+    //     yaw_cmd = std::isnan(rudder_cmd) ? message.data : rudder_cmd;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        elevator_cmd_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void elevator_cmd_callback(const Float64SetpointMsg &message)
-    {
-        elevator_cmd = message.data;
-        pitch_cmd = message.data;
-    }
+    // void elevator_cmd_callback(const Float64SetpointMsg &message)
+    // {
+    //     elevator_cmd = message.data;
+    //     pitch_cmd = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        rudder_cmd_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void rudder_cmd_callback(const Float64SetpointMsg &message)
-    {
-        rudder_cmd = message.data;
-        yaw_cmd = message.data;
-    }
+    // void rudder_cmd_callback(const Float64SetpointMsg &message)
+    // {
+    //     rudder_cmd = message.data;
+    //     yaw_cmd = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        rpm_setpoint_callback
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: Message received on the topic.
     //--------------------------------------------------------------------------
-    void rpm_setpoint_callback(const Float64SetpointMsg &message)
-    {
-        rpm_cmd = message.data;
-    }
+    // void rpm_setpoint_callback(const Float64SetpointMsg &message)
+    // {
+    //     rpm_cmd = message.data;
+    // }
 
     //--------------------------------------------------------------------------
     // Name:        fault_callback
@@ -264,22 +269,21 @@ private:
     void fault_callback(const avl::SubscriberFault& fault)
     {
 
-
-        if (fault.topic == "device/depth")
-        {
-            depth = NAN;
-            depth_sub.reset();
-        }
-        else if (fault.topic == "device/height")
-        {
-            height = NAN;
-            height_sub.reset();
-        }
-        else if (fault.topic == "device/rpm")
-        {
-            rpm = NAN;
-            rpm_sub.reset();
-        }
+        // if (fault.topic == "device/depth")
+        // {
+        //     depth = NAN;
+        //     depth_sub.reset();
+        // }
+        // else if (fault.topic == "device/height")
+        // {
+        //     height = NAN;
+        //     height_sub.reset();
+        // }
+        // else if (fault.topic == "device/rpm")
+        // {
+        //     rpm = NAN;
+        //     rpm_sub.reset();
+        // }
         else if (fault.topic == "navigation/nav")
         {
             roll =  NAN;
@@ -293,46 +297,46 @@ private:
             alt =   NAN;
             nav_sub.reset();
         }
-        else if (fault.topic == "setpoint/depth")
-        {
-            depth_cmd = NAN;
-            depth_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/height")
-        {
-            height_cmd = NAN;
-            height_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/roll")
-        {
-            roll_cmd = NAN;
-            roll_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/pitch")
-        {
-            pitch_cmd = NAN;
-            pitch_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/yaw")
-        {
-            yaw_cmd = NAN;
-            yaw_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/elevator")
-        {
-            elevator_cmd = NAN;
-            elevator_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/rudder")
-        {
-            rudder_cmd = NAN;
-            rudder_cmd_sub.reset();
-        }
-        else if (fault.topic == "setpoint/rpm")
-        {
-            rpm_cmd = NAN;
-            rpm_cmd_sub.reset();
-        }
+        // else if (fault.topic == "setpoint/depth")
+        // {
+        //     depth_cmd = NAN;
+        //     depth_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/height")
+        // {
+        //     height_cmd = NAN;
+        //     height_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/roll")
+        // {
+        //     roll_cmd = NAN;
+        //     roll_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/pitch")
+        // {
+        //     pitch_cmd = NAN;
+        //     pitch_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/yaw")
+        // {
+        //     yaw_cmd = NAN;
+        //     yaw_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/elevator")
+        // {
+        //     elevator_cmd = NAN;
+        //     elevator_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/rudder")
+        // {
+        //     rudder_cmd = NAN;
+        //     rudder_cmd_sub.reset();
+        // }
+        // else if (fault.topic == "setpoint/rpm")
+        // {
+        //     rpm_cmd = NAN;
+        //     rpm_cmd_sub.reset();
+        // }
 
     }
 
@@ -344,13 +348,77 @@ private:
     //--------------------------------------------------------------------------
     void ekf_iteration(const ros::TimerEvent& event)
     {
-//TODO 
-        // Run EKF filter
-        // Get residuals from filter
-        // Check residuals for error (threshold or std deviation check)
+
+        if(!filter_initialized)
+        {
+            // Fill the initial state vector
+            VectorXd x0 = VectorXd::Zero(num_states);
+            x0(0) = roll;
+            x0(1) = pitch;
+            x0(2) = yaw;
+            x0(3) = vn;
+            x0(4) = ve;
+            x0(5) = vd;
+            x0(6) = lat;
+            x0(7) = lon;
+            x0(8) = alt;
+
+            // Initialize the kalman filter
+            filter.init(x0, P0);
+            filter_initialized = true;
+
+            log_info("-------------------------------------------");
+            log_info("Nav filter initialized!");
+            log_info("    mode:  %d", init_mode);
+            log_info("    roll:  %.3f deg", avl::rad_to_deg(x0(0)));
+            log_info("    pitch: %.3f deg", avl::rad_to_deg(x0(1)));
+            log_info("    yaw:   %.3f deg", avl::rad_to_deg(x0(2)));
+            log_info("    vN:    %.3f m/s", x0(3));
+            log_info("    vE:    %.3f m/s", x0(4));
+            log_info("    vD:    %.3f m/s", x0(5));
+            log_info("    lat:   %.3f deg", avl::rad_to_deg(x0(6)));
+            log_info("    lon:   %.3f deg", avl::rad_to_deg(x0(7)));
+            log_info("    alt:   %.3f m",   x0(8));
+            log_info("-------------------------------------------");
+
+        }
+        else 
+        {
+            // Run EKF filter
+
+            // EKF functions:
+            // filter.predict(F, Q);
+            //------------------------------------------------------------------------------
+            // Name:        predict
+            // Description: Predicts the next state and state covariance using the
+            //              state transition matrix.
+            // Arguments:   - F: state transition matrix (N x N)
+            //              - Q: process noise covariance matrix (N x N)
+            //------------------------------------------------------------------------------
+
+            // MeasInfo filter_info = filter.update(H, R, z, threshold);
+            //------------------------------------------------------------------------------
+            // Name:        update
+            // Description: Updates the state and state covariance using the given
+            //              measurement matrix and its noise covariance matrix.
+            // Arguments:   - H: measurement matrix (M x N)
+            //              - R: measurement noise covariance matrix (M x M)
+            //              - z: measurement value (M x 1)
+            //------------------------------------------------------------------------------
+            // filter_info.y
+            // filter_info.y_bar
+            // filter_info.P_yy
+            // filter_info.innovation
+            // filter_info.threshold 
+            // filter_info.accepted
+
+            // Get residuals from filter
+            // Check residuals for error (threshold or std deviation check)
             // Can store thresholds in config file
-        double depth_thresh =  get_param<double>("~thresholds/depth");
-        double height_thresh = get_param<double>("~thresholds/height");
+            double depth_thresh =  get_param<double>("~thresholds/depth");
+            double height_thresh = get_param<double>("~thresholds/height");
+        }
+
 
     }
 
@@ -360,69 +428,76 @@ private:
     //--------------------------------------------------------------------------
     void init()
     {
+        // Construct the initial state and process noise covariance matrices
+        // from the config file
+        P0 = avl::from_std_vector(get_param<doubles_t>("~P0")).asDiagonal();
+        Q = avl::from_std_vector(get_param<doubles_t>("~Q")).asDiagonal();
+        num_states = P0.rows();
+
+
         // Set up the publishers and subscribers
-        depth_sub.subscribe("device/depth", 1,
-            &EkfFaultDetectionNode::depth_msg_callback,
-            &EkfFaultDetectionNode::fault_callback, this);
-        height_sub.subscribe("device/height", 1,
-            &EkfFaultDetectionNode::height_msg_callback,
-            &EkfFaultDetectionNode::fault_callback, this);
-        rpm_sub.subscribe("device/rpm", 1,
+        // depth_sub.subscribe("device/depth", 1,
+        //     &EkfFaultDetectionNode::depth_msg_callback,
+        //     &EkfFaultDetectionNode::fault_callback, this);
+        // height_sub.subscribe("device/height", 1,
+        //     &EkfFaultDetectionNode::height_msg_callback,
+        //     &EkfFaultDetectionNode::fault_callback, this);
+        // rpm_sub.subscribe("device/rpm", 1,
             &EkfFaultDetectionNode::rpm_msg_callback,
             &EkfFaultDetectionNode::fault_callback, this);
         nav_sub.subscribe("navigation/nav", 1,
             &EkfFaultDetectionNode::nav_msg_callback,
             &EkfFaultDetectionNode::fault_callback, this);
-        depth_cmd_sub.subscribe("setpoint/depth", 8,
-                        &EkfFaultDetectionNode::depth_setpoint_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        height_cmd_sub.subscribe("setpoint/height", 8,
-                        &EkfFaultDetectionNode::height_setpoint_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        roll_cmd_sub.subscribe("setpoint/roll", 8,
-                        &EkfFaultDetectionNode::roll_setpoint_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        pitch_cmd_sub.subscribe("setpoint/pitch", 8,
-                        &EkfFaultDetectionNode::pitch_setpoint_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        yaw_cmd_sub.subscribe("setpoint/yaw", 8,
-                        &EkfFaultDetectionNode::yaw_setpoint_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        elevator_cmd_sub.subscribe("setpoint/elevator", 8,
-                        &EkfFaultDetectionNode::elevator_cmd_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        rudder_cmd_sub.subscribe("setpoint/rudder", 8,
-                        &EkfFaultDetectionNode::rudder_cmd_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
-        rpm_cmd_sub.subscribe("setpoint/rpm", 8,
-                        &EkfFaultDetectionNode::rpm_setpoint_callback,
-                        &EkfFaultDetectionNode::fault_callback, this);
+        // depth_cmd_sub.subscribe("setpoint/depth", 8,
+        //                 &EkfFaultDetectionNode::depth_setpoint_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // height_cmd_sub.subscribe("setpoint/height", 8,
+        //                 &EkfFaultDetectionNode::height_setpoint_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // roll_cmd_sub.subscribe("setpoint/roll", 8,
+        //                 &EkfFaultDetectionNode::roll_setpoint_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // pitch_cmd_sub.subscribe("setpoint/pitch", 8,
+        //                 &EkfFaultDetectionNode::pitch_setpoint_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // yaw_cmd_sub.subscribe("setpoint/yaw", 8,
+        //                 &EkfFaultDetectionNode::yaw_setpoint_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // elevator_cmd_sub.subscribe("setpoint/elevator", 8,
+        //                 &EkfFaultDetectionNode::elevator_cmd_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // rudder_cmd_sub.subscribe("setpoint/rudder", 8,
+        //                 &EkfFaultDetectionNode::rudder_cmd_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
+        // rpm_cmd_sub.subscribe("setpoint/rpm", 8,
+        //                 &EkfFaultDetectionNode::rpm_setpoint_callback,
+        //                 &EkfFaultDetectionNode::fault_callback, this);
                         
-        depth_sub.set_message_rate(0.5);
-        height_sub.set_message_rate(0.5);
-        rpm_sub.set_message_rate(0.5);
+        // depth_sub.set_message_rate(0.5);
+        // height_sub.set_message_rate(0.5);
+        // rpm_sub.set_message_rate(0.5);
         nav_sub.set_message_rate(0.5);
-        depth_cmd_sub.set_message_rate(0.5);
-        height_cmd_sub.set_message_rate(0.5);
-        roll_cmd_sub.set_message_rate(0.5);
-        pitch_cmd_sub.set_message_rate(0.5);
-        yaw_cmd_sub.set_message_rate(0.5);
-        elevator_cmd_sub.set_message_rate(0.5);
-        rudder_cmd_sub.set_message_rate(0.5);
-        rpm_cmd_sub.set_message_rate(0.5);
+        // depth_cmd_sub.set_message_rate(0.5);
+        // height_cmd_sub.set_message_rate(0.5);
+        // roll_cmd_sub.set_message_rate(0.5);
+        // pitch_cmd_sub.set_message_rate(0.5);
+        // yaw_cmd_sub.set_message_rate(0.5);
+        // elevator_cmd_sub.set_message_rate(0.5);
+        // rudder_cmd_sub.set_message_rate(0.5);
+        // rpm_cmd_sub.set_message_rate(0.5);
 
-        depth_sub.enable_message_rate_check(true);
-        height_sub.enable_message_rate_check(true);
-        rpm_sub.enable_message_rate_check(true);
+        // depth_sub.enable_message_rate_check(true);
+        // height_sub.enable_message_rate_check(true);
+        // rpm_sub.enable_message_rate_check(true);
         nav_sub.enable_message_rate_check(true);
-        depth_cmd_sub.enable_message_rate_check(true);
-        height_cmd_sub.enable_message_rate_check(true);
-        roll_cmd_sub.enable_message_rate_check(true);
-        pitch_cmd_sub.enable_message_rate_check(true);
-        yaw_cmd_sub.enable_message_rate_check(true);
-        elevator_cmd_sub.enable_message_rate_check(true);
-        rudder_cmd_sub.enable_message_rate_check(true);
-        rpm_cmd_sub.enable_message_rate_check(true);
+        // depth_cmd_sub.enable_message_rate_check(true);
+        // height_cmd_sub.enable_message_rate_check(true);
+        // roll_cmd_sub.enable_message_rate_check(true);
+        // pitch_cmd_sub.enable_message_rate_check(true);
+        // yaw_cmd_sub.enable_message_rate_check(true);
+        // elevator_cmd_sub.enable_message_rate_check(true);
+        // rudder_cmd_sub.enable_message_rate_check(true);
+        // rpm_cmd_sub.enable_message_rate_check(true);
 
         // Set up the iteration timer
         double iteration_rate = get_param<double>("~iteration_rate");
