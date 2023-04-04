@@ -50,7 +50,7 @@ def main():
     fault_rpm_zero = Fault("fault_gen/rpm_zero")
 
     log = logger.AvlLogger('data_collector')
-    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name(), "hull_drag", "rpm_zero"], msg_units=["bool", "bool", "bool"])
+    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name(), fault_hull_drag.get_topic_name(), fault_rpm_zero.get_topic_name()], msg_units=["bool", "bool", "bool"])
 
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
@@ -88,7 +88,7 @@ def main():
         rospy.sleep(0.1)
 
     # Wait for a bit before we start publishing
-    rospy.sleep(10) 
+    rospy.sleep(10)
     print("\n\nBeginning to publish setpoints!\n\n")
     # Record start time so we can log when fault starts
     now = rospy.Time.now()

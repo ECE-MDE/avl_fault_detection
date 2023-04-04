@@ -20,16 +20,14 @@ class Fault:
         self._enabled = False
         self._fault_topic = roslibpy.Topic(ros, topic_name, 'std_msgs/Bool', queue_size=100)
 
-    def _publish(self):
+    def publish(self):
         self._fault_topic.publish(Message({'data': self._enabled}))
 
     def enable(self):
         self._enabled = True
-        self._publish()
     
     def disable(self):
         self._enabled = False
-        self._publish()
 
     def get_topic_name(self) -> str:
         return self._topic_name
@@ -51,11 +49,12 @@ def main():
     # SIM PARAMETERS
     n_trials = 2
     trial_duration_s = 60
+    hull_drag_coeff = -6.244
     fault_trigger_times: Dict[Fault, float] = {
         Fault(ros, "fault_gen/depth_sensor_zero"): 30,
+        Fault(ros, "fault_gen/hull_drag"): 0 if hull_drag_coeff != -3.244 else None,
+        Fault(ros, "fault_gen/rpm_zero"): 30
     }
-    hull_drag_coeff = -3.2440
-
     for n_trial in range(n_trials):
         print(f"\n\nStarting trial {n_trial}\n\n")
 
@@ -89,40 +88,39 @@ def main():
         ros.run(timeout=30)
 
         sim_state = roslibpy.Topic(ros, "/sim/state", 'avl_msgs/VehicleStateMsg')
-        sim_state_initialized = False
-
-        def wait_for_sim_state(msg: VehicleStateMsg):
-            nonlocal sim_state_initialized
-            if not sim_state_initialized:
-                sim_state_initialized = True
+        sim_state_initialized = util.Flag()
 
         print("Waiting for first vehicle state...")
-        # for topic in ros.get_topics():
-        #     print(f"{topic}\t{ros.get_topic_type(topic)}")
-        # Wait for the sim to be initialized
-        sim_state.subscribe(wait_for_sim_state)
-        while not sim_state_initialized:
+        sim_state.subscribe(lambda _: sim_state_initialized.set(True))
+        while not sim_state_initialized.get():
             time.sleep(0.1)
         print("Starting trial!")
 
-        start_time = ros.get_time().secs
-        current_time = start_time
-        while current_time - start_time < trial_duration_s:
+
+        current_time = 0
+        start_time = ros.get_time().to_sec()
+        while current_time < trial_duration_s:
+            print(current_time)
             # Enable faults if trigger time has passed
             for fault, trigger_time in fault_trigger_times.items():
                 # Ignore faults with trigger_time = None
-                if trigger_time and not fault.is_enabled() and current_time > trigger_time:
+                if trigger_time is not None and not fault.is_enabled() and current_time > trigger_time:
                     print(f"Enabling {fault.get_topic_name()} at {current_time}")
                     fault.enable()
+                fault.publish()
 
             # Run 1 cycle of roslaunch process
             launch.spin_once()
             # Update current time
-            current_time = ros.get_time().to_sec()
+            current_time = ros.get_time().to_sec() - start_time
         
         print(f"\n\nEnding trial {n_trial}\n\n")
         launch.shutdown()
         ros.close()
+
+        # Reset fault status
+        for fault in fault_trigger_times.keys():
+            fault.disable()
 
     sys.exit()
 
