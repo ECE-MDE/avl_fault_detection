@@ -20,23 +20,13 @@ yaw rate
 """
 
 class Fault:
-    def __init__(self, topic_name: str, publish_rate_hz: int = 50):
+    def __init__(self, topic_name: str):
         self._topic_name = topic_name
         self._enabled = False
-        self._publish_rate_hz = publish_rate_hz
-        self._publisher = rospy.Publisher(topic_name, Bool, queue_size=100)
+        self._subscriber = rospy.Subscriber(topic_name, Bool, lambda msg: self._subscribe_listener(msg))
 
-    def _publish(self, event):
-        self._publisher.publish(Bool(self._enabled))
-
-    def start_publisher(self):
-        rospy.Timer(rospy.Duration(1.0 / self._publish_rate_hz), lambda e: self._publish(e))
-
-    def enable(self):
-        self._enabled = True
-    
-    def disable(self):
-        self._enabled = False
+    def _subscribe_listener(self, msg: Bool):
+        self._enabled = msg.data
 
     def get_topic_name(self) -> str:
         return self._topic_name
@@ -52,20 +42,22 @@ def main():
     start_time = rospy.Time.from_sec(0)
     logging_rate_hz = rospy.Rate(2)
 
-    fault_trigger_time = rospy.Duration(rospy.get_param("/fault_trigger_time"))
+    # fault_trigger_time = rospy.Duration(rospy.get_param("/fault_trigger_time"))
     hull_drag_coeff = rospy.get_param("/auv_dynamics_node/X_uu")
 
     fault_depth_sensor_zero = Fault("fault_gen/depth_sensor_zero")
+    fault_hull_drag = Fault("fault_gen/hull_drag")
+    fault_rpm_zero = Fault("fault_gen/rpm_zero")
 
     log = logger.AvlLogger('data_collector')
-    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name(), "hull_drag"], msg_units=["bool", "bool"])
+    log.write_msg_header([VehicleStateMsg], [fault_depth_sensor_zero.get_topic_name(), fault_hull_drag.get_topic_name(), fault_rpm_zero.get_topic_name()], msg_units=["bool", "bool", "bool"])
 
 
     # Create a subscriber for the sim state topic and print the sim state to the terminal every 1 second
     def log_sim_state(msg: VehicleStateMsg):
-        log.write_msg_data([msg], [fault_depth_sensor_zero.is_enabled(), hull_drag_coeff != -3.2440])
+        log.write_msg_data([msg], [fault_depth_sensor_zero.is_enabled(), fault_hull_drag.is_enabled(), fault_rpm_zero.is_enabled()])
         log.flush() # for debugging purposes
-        print(f"{fault_trigger_time}\n{(rospy.Time.now() - start_time).secs}\n{rospy.Time.now().secs}\n{msg}\r")
+        # print(f"{fault_trigger_time}\n{(rospy.Time.now() - start_time).secs}\n{rospy.Time.now().secs}\n{msg}\r")
         # print(f"{15} {math.radians(15)} {math.degrees(msg.pitch)} {msg.pitch}\r")
         logging_rate_hz.sleep()
 
@@ -96,7 +88,7 @@ def main():
         rospy.sleep(0.1)
 
     # Wait for a bit before we start publishing
-    rospy.sleep(10) 
+    rospy.sleep(10)
     print("\n\nBeginning to publish setpoints!\n\n")
     # Record start time so we can log when fault starts
     now = rospy.Time.now()
@@ -106,13 +98,13 @@ def main():
     rospy.Subscriber("/sim/state", VehicleStateMsg, log_sim_state)
 
     # Start publishing fault status
-    fault_depth_sensor_zero.start_publisher()
+    # fault_depth_sensor_zero.start_publisher()
 
     # Set up timers to repeatedly call the publishing methods
     rospy.Timer(rospy.Duration(1.0 / 10.0), publish_setpoints)
     rospy.Timer(rospy.Duration(1.0 / 0.5), publish_actuator_enable)
     # Set up timer to start fault generation
-    rospy.Timer(fault_trigger_time, lambda _: fault_depth_sensor_zero.enable(), oneshot=True)
+    # rospy.Timer(fault_trigger_time, lambda _: fault_depth_sensor_zero.enable(), oneshot=True)
 
     try:
         rospy.spin()
