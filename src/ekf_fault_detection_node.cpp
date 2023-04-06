@@ -20,6 +20,7 @@
 // Node base class
 #include <avl_core/node.h>
 #include <avl_core/monitored_subscriber.h>
+#include <avl_navigation/algorithm/moving_avg.h>
 
 
 // ROS message includes
@@ -44,7 +45,7 @@ public:
     //--------------------------------------------------------------------------
     // Name:        EkfFaultDetectionNode constructor
     //--------------------------------------------------------------------------
-    EkfFaultDetectionNode(int argc, char **argv) : Node(argc, argv)
+    EkfFaultDetectionNode(int argc, char **argv) : Node(argc, argv), depth_res_avg(10)
     {
 
     }
@@ -55,6 +56,11 @@ private:
     ros::Subscriber range_res_sub;
     ros::Subscriber dvl_res_sub;
     ros::Subscriber depth_res_sub;
+
+    // Publishers for fault status
+    ros::Publisher depth_zero_fault;
+
+    MovingAvg depth_res_avg;
 
 private:
     //--------------------------------------------------------------------------
@@ -100,9 +106,12 @@ private:
     //--------------------------------------------------------------------------
     void depth_res_msg_callback(const std_msgs::Float64& message)
     {
-
-        double res = message.data;
-
+        depth_res_avg.add_sample(message.data);
+        if(depth_res_avg.get_stddev() > 10) {
+            Float64 fault_msg;
+            fault_msg.data = 1.0;
+            depth_zero_fault.publish(fault_msg);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -115,6 +124,9 @@ private:
         range_res_sub = node_handle->subscribe("nav/range_residual",    1,  &EkfFaultDetectionNode::range_res_msg_callback, this);
         dvl_res_sub =   node_handle->subscribe("nav/dvl_residual",      1,  &EkfFaultDetectionNode::dvl_res_msg_callback, this);
         depth_res_sub = node_handle->subscribe("nav/depth_residual",    1,  &EkfFaultDetectionNode::depth_res_msg_callback, this);
+
+        // Configure as latched so we only have to update once
+        depth_zero_fault = node_handle->advertise<Float64>("fault_pred/kf/depth_zero_fault", 1, true);
     }
 
     //--------------------------------------------------------------------------
