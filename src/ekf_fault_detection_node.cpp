@@ -25,7 +25,9 @@
 // ROS message includes
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
-using namespace avl_msgs;
+// using namespace avl_msgs;
+using namespace avl;
+using namespace Eigen;
 using namespace geometry_msgs;
 using namespace std_msgs;
 
@@ -63,7 +65,7 @@ private:
     void gps_res_msg_callback(const geometry_msgs::Vector3& message)
     {
 
-        Vector3d res = {message.x, message.y, message.z};
+        Eigen::Vector3d res = {message.x, message.y, message.z};
 
     }
 
@@ -96,10 +98,10 @@ private:
     // Description: Called when a message is received on the topic.
     // Arguments:   - message: message received on the topic
     //--------------------------------------------------------------------------
-    void depth_res_msg_callback(const geometry_msgs::Vector3& message)
+    void depth_res_msg_callback(const std_msgs::Float64& message)
     {
 
-        double res = msg.data;
+        double res = message.data;
 
     }
 
