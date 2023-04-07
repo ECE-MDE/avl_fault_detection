@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   sensor_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -165,6 +166,7 @@ catkin_install_python(PROGRAMS
   src/data_collection_launcher.py
   src/data_collector.py
   src/simple_fault_detector.py
+  src/kf_fault_detector.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

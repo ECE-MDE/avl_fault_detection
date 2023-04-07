@@ -32,29 +32,51 @@ class Flag:
     def get(self) -> bool:
         return self._state
 
-class Timeseries:
-    def __init__(self, max_len_s: float | None):
-        self._latest_update_s = None
-        self._max_len_s = max_len_s
-        self._data = {}
+class MovingAvg:
 
-    def add(self, t: float, value):
-        self._data[t] = value
-        if self._max_len_s:
-            for ts in self._data:
-                if t - ts > self._max_len_s:
-                    self._data.pop(ts)
-                else:
-                    # exit the first time we encounter a timestamp within the length window
-                    return
+    def __init__(self, window_size: int):
+        self._window_size = window_size
+        self._window = []
     
-    def get(self, t: float) -> Tuple[float, Any]:
-        # yeah, it's big brain time
-        for a, b in grouped(self._data.keys(), 2):
-            if abs(t - a) < abs(t - b):
-                return a, self._data[a]
-            else:
-                return b, self._data[b]
+    def avg(self) -> float:
+        return sum(self._window) / len(self._window)
+    
+    def var(self) -> float:
+        avg = self.avg()
+        return sum((x - avg)**2 for x in self._window) / len(self._window)
 
-    def get_latest(self):
-        return self._data.values()[-1]
+    def std(self) -> float:
+        avg = self.avg()
+        return self.var()**0.5   
+
+    def add(self, val: float) -> float:
+        self._window.append(val)
+        if len(self._window) > self._window_size:
+            self._window.pop(0)
+        return self.avg()
+    
+    def reset(self):
+        self._window = []
+        self._sum = 0
+
+class MultiMovingAvg:
+
+    def __init__(self, window_size: int, n: int):
+        self._n = n
+        self._moving_avg = [MovingAvg(window_size) for _ in range(n)]
+    
+    def avg(self) -> Tuple[float]:
+        return tuple(m.avg() for m in self._moving_avg) 
+    
+    def var(self) -> Tuple[float]:
+        return tuple(m.var() for m in self._moving_avg)
+
+    def std(self) -> Tuple[float]:
+        return tuple(m.std() for m in self._moving_avg)
+
+    def add(self, vals: Tuple[float]) -> Tuple[float]:
+        return tuple(m.add(v) for m, v in zip(self._moving_avg, vals))
+
+    def reset(self):
+        for m in self._moving_avg:
+            m.reset()
