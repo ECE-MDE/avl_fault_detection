@@ -59,6 +59,9 @@ class MovingAvg:
         self._window = []
         self._sum = 0
 
+    def full(self) -> bool:
+        return len(self._window) == self._window_size
+
 class MultiMovingAvg:
 
     def __init__(self, window_size: int, n: int):
