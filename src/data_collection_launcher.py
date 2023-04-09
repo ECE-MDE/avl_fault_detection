@@ -49,19 +49,20 @@ def main():
     # SIM PARAMETERS
     n_trials = 2
     trial_duration_s = 600
-    hull_drag_coeff = -6.244
+    hull_drag_coeff = -3.244
     fault_trigger_times: Dict[Fault, float] = {
-        Fault(ros, "fault_gen/depth_sensor_zero"): 30,
-        Fault(ros, "fault_gen/depth_sensor_hold"): 30,
-        Fault(ros, "fault_gen/depth_sensor_noisy"): 30,
-        Fault(ros, "fault_gen/imu_accel_zero"): 30,
-        Fault(ros, "fault_gen/imu_accel_noisy"): 30,
-        Fault(ros, "fault_gen/imu_accel_hold"): 30,
-        Fault(ros, "fault_gen/imu_vel_zero"): 30,
-        Fault(ros, "fault_gen/imu_vel_noisy"): 30,
-        Fault(ros, "fault_gen/imu_vel_hold"): 30,
+        Fault(ros, "fault_gen/depth_sensor_zero"): None,
+        Fault(ros, "fault_gen/depth_sensor_hold"): None,
+        Fault(ros, "fault_gen/depth_sensor_noisy"): None,
+        Fault(ros, "fault_gen/imu_accel_zero"): None,
+        Fault(ros, "fault_gen/imu_accel_noisy"): None,
+        Fault(ros, "fault_gen/imu_accel_hold"): None,
+        Fault(ros, "fault_gen/imu_vel_zero"): None,
+        Fault(ros, "fault_gen/imu_vel_noisy"): None,
+        Fault(ros, "fault_gen/imu_vel_hold"): None,
         Fault(ros, "fault_gen/hull_drag"): 0 if hull_drag_coeff != -3.244 else None,
-        Fault(ros, "fault_gen/rpm_zero"): None
+        Fault(ros, "fault_gen/rpm_zero"): 30,
+        Fault(ros, "fault_gen/rpm_sensor_zero"): None
     }
     for n_trial in range(n_trials):
         print(f"\n\nStarting trial {n_trial}\n\n")
