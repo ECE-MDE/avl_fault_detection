@@ -273,12 +273,7 @@
     <node name="data_collector" pkg="avl_fault_detection" type="data_collector.py"
            clear_params="true" required="true" output="screen">
         <!-- <rosparam command="load" file="/var/avl_config/rpm_sim_node.config"/> -->
-    </node> 
-
-    <node name="simple_fault_detector" pkg="avl_fault_detection" type="simple_fault_detector.py"
-           clear_params="true" required="true" output="screen">
-        <!-- <rosparam command="load" file="/var/avl_config/rpm_sim_node.config"/> -->
-    </node> 
+    </node>
 
     <!-- =================================================================== -->
     <!-- Tester Nodes -->
