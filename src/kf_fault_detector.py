@@ -13,16 +13,19 @@ def main():
     # Fault status flags
     depth_sensor_zero_status = Flag()
     rpm_sensor_zero_state = Flag()
+    rpm_zero_state = Flag()
     hull_drag_state = Flag()
 
     # Fault status publishers
     depth_sensor_zero = rospy.Publisher('fault_pred/kf/depth_sensor_zero', Float64, queue_size=100, latch=True)
     rpm_sensor_zero = rospy.Publisher('fault_pred/kf/rpm_sensor_zero', Float64, queue_size=100, latch=True)
+    rpm_zero = rospy.Publisher('fault_pred/kf/rpm_zero', Float64, queue_size=100, latch=True)
     hull_drag = rospy.Publisher('fault_pred/kf/hull_drag', Float64, queue_size=100, latch=True)
 
     # Fault residual std publishers
     depth_sensor_res_std = rospy.Publisher('fault_pred/kf/std/depth_sensor_zero', Float64, queue_size=100, latch=True)
-    rpm_error_std = rospy.Publisher('fault_pred/kf/std/rpm_sensor_zero', Float64, queue_size=100, latch=True)
+    rpm_sensor_error_std = rospy.Publisher('fault_pred/kf/std/rpm_sensor_zero', Float64, queue_size=100, latch=True)
+    rpm_error_std = rospy.Publisher('fault_pred/kf/std/rpm_zero', Float64, queue_size=100, latch=True)
 
     gps_residual = MultiMovingAvg(10, 3)
     dvl_residual = MultiMovingAvg(10, 3)
@@ -32,7 +35,7 @@ def main():
 
     rpm_setpoint_update_time = 0
     rpm_setpoint = 0
-    rpm_error = MovingAvg(20)
+    rpm_sensor_error = MovingAvg(20)
 
     def update_gps_residual(msg: Vector3):
         gps_residual.add((msg.x, msg.y, msg.z))
@@ -57,16 +60,16 @@ def main():
     def update_rpm_setpoint(msg: Float64SetpointMsg):
         nonlocal rpm_setpoint
         if msg.data != rpm_setpoint:
-            rpm_error.reset()
+            rpm_sensor_error.reset()
             rpm_setpoint = msg.data
 
     def update_rpm_reading(msg: Float64):
         nonlocal rpm_setpoint
-        rpm_error.add(rpm_setpoint - msg.data)
-        if rpm_error.full():
-            if rpm_error.std() > 800:
+        rpm_sensor_error.add(rpm_setpoint - msg.data)
+        if rpm_sensor_error.full():
+            if rpm_sensor_error.std() > 800:
                 rpm_sensor_zero_state.set(True)
-            rpm_error_std.publish(rpm_error.std())
+            rpm_sensor_error_std.publish(rpm_sensor_error.std())
 
         rpm_sensor_zero.publish(Float64(1.0 if rpm_sensor_zero_state.get() else 0.0))
 
