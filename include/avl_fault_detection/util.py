@@ -59,8 +59,19 @@ class MovingAvg:
         self._window = []
         self._sum = 0
 
+    def num_samples(self) -> int:
+        return len(self._window)
+
+    def get_latest(self, n=0) -> float:
+        return self._window[-1-n]
+
     def full(self) -> bool:
         return len(self._window) == self._window_size
+
+    def covariance(self, other: MovingAvg) -> float:
+        avg1 = self.avg()
+        avg2 = other.avg()
+        return sum((x - avg1)*(y - avg2) for x, y in zip(self._window, other._window)) / len(self._window)
 
 class MultiMovingAvg:
 
